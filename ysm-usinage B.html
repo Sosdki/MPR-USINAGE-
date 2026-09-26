@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>YSM Usinage</title>
+<style>
+:root{
+  --bg:#181b1f; --panel:#20242a; --panel2:#262b32; --line:#343b44;
+  --text:#e7e9ec; --muted:#8d96a1; --accent:#4a90c4; --accent2:#e8a33d;
+  --ok:#5bae7a; --warn:#d9663b; --mono:'IBM Plex Mono',Consolas,monospace;
+  --sans:'IBM Plex Sans',Arial,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#181b1f;}}
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+*{box-sizing:border-box;}
+html{scroll-padding-top:env(safe-area-inset-top,0px);}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100%;}
+.app{display:flex;min-height:100vh;}
+.side{width:230px;flex:none;background:var(--panel);border-right:1px solid var(--line);padding:20px 0;}
+.brand{padding:0 20px 18px;border-bottom:1px solid var(--line);margin-bottom:10px;}
+.brand b{font-family:var(--mono);font-size:1.05rem;letter-spacing:.02em;color:var(--accent2);}
+.brand div{color:var(--muted);font-size:.78rem;margin-top:3px;}
+.steps{list-style:none;margin:0;padding:0;}
+.steps li{padding:11px 20px;border-left:3px solid transparent;cursor:pointer;color:var(--muted);font-size:.92rem;display:flex;gap:10px;align-items:center;}
+.steps li .n{font-family:var(--mono);font-size:.78rem;width:18px;color:var(--muted);}
+.steps li.active{border-left-color:var(--accent2);color:var(--text);background:var(--panel2);}
+.steps li.active .n{color:var(--accent2);}
+.steps li.done .n{color:var(--ok);}
+main{flex:1;padding:34px 42px;max-width:860px;}
+h1{font-size:1.3rem;margin:0 0 4px;}
+.sub{color:var(--muted);font-size:.9rem;margin-bottom:26px;}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:22px 24px;margin-bottom:18px;}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+label{display:block;font-size:.82rem;color:var(--muted);margin-bottom:5px;}
+input,select{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:9px 10px;border-radius:4px;font-family:var(--sans);font-size:.92rem;}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px;}
+.field{margin-bottom:14px;}
+.row-actions{display:flex;justify-content:space-between;margin-top:22px;}
+button{font-family:var(--sans);font-weight:600;font-size:.88rem;border:none;border-radius:4px;padding:10px 18px;cursor:pointer;}
+.btn-next{background:var(--accent2);color:#181b1f;}
+.btn-next:hover{filter:brightness(1.08);}
+.btn-back{background:transparent;color:var(--muted);border:1px solid var(--line);}
+.btn-back:disabled{opacity:.35;cursor:default;}
+.chips{display:flex;flex-wrap:wrap;gap:8px;}
+.chip{border:1px solid var(--line);background:var(--panel2);padding:7px 12px;border-radius:20px;font-size:.84rem;cursor:pointer;color:var(--muted);}
+.chip.sel{border-color:var(--accent2);color:var(--accent2);background:rgba(232,163,61,.08);}
+.hint{font-size:.78rem;color:var(--muted);margin-top:4px;}
+.result{font-family:var(--mono);}
+.kv{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed var(--line);font-size:.92rem;}
+.kv:last-child{border-bottom:none;}
+.kv b{color:var(--accent2);}
+.badge{display:inline-block;font-size:.72rem;font-family:var(--mono);padding:2px 8px;border-radius:3px;background:rgba(91,174,122,.15);color:var(--ok);}
+.badge.low{background:rgba(217,102,59,.15);color:var(--warn);}
+.opline{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:.88rem;}
+.opline .tag{font-family:var(--mono);color:var(--accent2);width:48px;flex:none;}
+.total{margin-top:12px;padding-top:12px;border-top:2px solid var(--line);display:flex;justify-content:space-between;font-size:1.05rem;}
+.total b{color:var(--accent2);font-family:var(--mono);}
+@media(max-width:780px){.app{flex-direction:column;}.side{width:100%;padding:12px 0;}.steps{display:flex;overflow-x:auto;}.steps li{border-left:none;border-bottom:3px solid transparent;white-space:nowrap;}.steps li.active{border-bottom-color:var(--accent2);}main{padding:22px 16px;}.grid{grid-template-columns:1fr;}}
+table.tt{width:100%;border-collapse:collapse;font-size:.82rem;margin-bottom:6px;}
+table.tt th,table.tt td{border:1px solid var(--line);padding:6px 7px;text-align:left;}
+table.tt th{background:var(--panel2);color:var(--muted);font-weight:600;font-size:.72rem;text-transform:uppercase;letter-spacing:.03em;}
+table.tt td.num{text-align:right;font-family:var(--mono);}
+table.tt tr.low td.num.buy{color:var(--warn);font-weight:600;}
+.miniform{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:10px;}
+.miniform input,.miniform select{font-size:.8rem;padding:7px 8px;}
+.iconbtn{background:transparent;border:1px solid var(--line);color:var(--warn);padding:4px 9px;font-size:.78rem;}
+.statuspill{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:.82rem;padding:5px 12px;border-radius:20px;border:1px solid var(--line);cursor:pointer;}
+.sig{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+.sigcard{border:1px solid var(--line);border-radius:6px;padding:14px;}
+.sigcard h4{margin:0 0 10px;font-size:.85rem;color:var(--accent2);}
+#printArea{display:none;}
+@media print{
+  body *{visibility:hidden;}
+  #printArea,#printArea *{visibility:visible;}
+  #printArea{display:block;position:absolute;top:0;left:0;width:100%;padding:20px;color:#000;background:#fff;}
+  #printArea table.tt th,#printArea table.tt td{border:1px solid #999;color:#000;}
+  #printArea .kv b{color:#000;}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="side">
+    <div class="brand"><b>YSM Usinage</b><div>Assistant méthodiste</div></div>
+    <ul class="steps" id="stepnav"></ul>
+  </nav>
+  <main id="main"></main>
+</div>
+
+<script>
+const MATERIALS = {
+  "Acier C45":{groupe:"P - Aciers non alliés",durete:"180-220 HB",vc:[160,220],f:[0.15,0.35],ap:[1,3],usinabilite:"Bonne"},
+  "Acier inoxydable 304L":{groupe:"M - Inox austénitique",durete:"170-220 HB",vc:[100,150],f:[0.1,0.25],ap:[0.5,2.5],usinabilite:"Difficile (écrouissage)"},
+  "Aluminium 6061":{groupe:"N - Alliages non ferreux",durete:"95 HB",vc:[300,600],f:[0.1,0.3],ap:[1,4],usinabilite:"Excellente"},
+  "Fonte GS400":{groupe:"K - Fontes",durete:"140-200 HB",vc:[120,180],f:[0.15,0.35],ap:[1,4],usinabilite:"Bonne (copeaux courts)"},
+  "Laiton CuZn39Pb":{groupe:"N - Alliages non ferreux",durete:"110 HB",vc:[200,350],f:[0.1,0.3],ap:[1,3],usinabilite:"Excellente"},
+  "Titane Ti-6Al-4V":{groupe:"S - Superalliages",durete:"330 HB",vc:[40,70],f:[0.08,0.15],ap:[0.5,1.5],usinabilite:"Très difficile (chaleur)"}
+};
+const OPS_TOURNAGE=["Dressage","Chariotage ébauche","Chariotage finition","Épaulement","Rainurage","Filetage","Perçage","Alésage","Tronçonnage","Chanfreinage"];
+const OPS_FRAISAGE=["Surfaçage","Contournage ébauche","Contournage finition","Rainurage","Poche","Perçage","Alésage","Taraudage","Fraisage de formes"];
+
+let S = {
+  piece:{ref:"",designation:"",matiere:"Acier C45",qte:100,dims:"",poids:"",type:"Petite série"},
+  machine:"Tour CNC",
+  ops:[],
+  coupe:{d:50,vc:190,f:0.2,ap:2,z:4,longueur:120,tauxHoraire:65,coutOutil:12,tempsPrep:15},
+  tools:[],
+  dossier:{numero:"DOS-2026-00001",methodiste:"",dateCreation:new Date().toLocaleDateString('fr-FR'),statut:"Brouillon",version:"V01"},
+  versions:[],
+  sig:{methodes:{nom:"",date:""},regleur:{nom:"",date:""},production:{nom:"",date:""}}
+};
+let step=0;
+const STEPS=["Pièce & matière","Machine","Opérations","Paramètres de coupe","Outillage","Gamme finale","Validation & rapport"];
+const STATUTS={"Brouillon":"🟡","En préparation":"🔵","En vérification":"🟠","Validé":"🟢","Modifié / À réviser":"🔴","Archivé":"⚫"};
+
+function renderNav(){
+  const nav=document.getElementById('stepnav');
+  nav.innerHTML='';
+  STEPS.forEach((s,i)=>{
+    const li=document.createElement('li');
+    li.className=(i===step?'active':'')+(i<step?' done':'');
+    li.innerHTML=`<span class="n">${i<step?'✓':i+1}</span> ${s}`;
+    li.onclick=()=>{step=i;render();};
+    nav.appendChild(li);
+  });
+}
+
+function nav(prev,next){
+  return `<div class="row-actions">
+    <button class="btn-back" ${step===0?'disabled':''} onclick="step--;render()">← Retour</button>
+    <button class="btn-next" onclick="${next}">${step===STEPS.length-1?'Regénérer la gamme':'Continuer →'}</button>
+  </div>`;
+}
+
+function render(){
+  renderNav();
+  const m=document.getElementById('main');
+  if(step===0) m.innerHTML=stepPiece();
+  else if(step===1) m.innerHTML=stepMachine();
+  else if(step===2) m.innerHTML=stepOps();
+  else if(step===3) m.innerHTML=stepCoupe();
+  else if(step===4) m.innerHTML=stepOutillage();
+  else if(step===5) m.innerHTML=stepGamme();
+  else m.innerHTML=stepValidation();
+}
+
+function stepPiece(){
+  const matOpts=Object.keys(MATERIALS).map(k=>`<option ${S.piece.matiere===k?'selected':''}>${k}</option>`).join('');
+  const typeOpts=["Unitaire","Petite série","Moyenne série","Grande série"].map(t=>`<option ${S.piece.type===t?'selected':''}>${t}</option>`).join('');
+  const mat=MATERIALS[S.piece.matiere];
+  return `<h1>Analyse de la pièce</h1><div class="sub">Étape 1 — renseigner la pièce à fabriquer et sa matière</div>
+  <div class="card">
+    <div class="grid">
+      <div class="field"><label>Référence</label><input id="ref" value="${S.piece.ref}" placeholder="PIECE-001"></div>
+      <div class="field"><label>Désignation</label><input id="desig" value="${S.piece.designation}" placeholder="Arbre épaulé"></div>
+      <div class="field"><label>Matière</label><select id="matiere">${matOpts}</select></div>
+      <div class="field"><label>Type de production</label><select id="type">${typeOpts}</select></div>
+      <div class="field"><label>Quantité de pièces</label><input id="qte" type="number" value="${S.piece.qte}"></div>
+      <div class="field"><label>Dimensions générales</label><input id="dims" value="${S.piece.dims}" placeholder="Ø50 × 120 mm"></div>
+      <div class="field"><label>Poids approximatif (kg)</label><input id="poids" value="${S.piece.poids}" placeholder="optionnel"></div>
+    </div>
+  </div>
+  <div class="card">
+    <label style="margin-bottom:10px;">Données matière — ${S.piece.matiere}</label>
+    <div class="result">
+      <div class="kv"><span>Groupe matière</span><b>${mat.groupe}</b></div>
+      <div class="kv"><span>Dureté</span><b>${mat.durete}</b></div>
+      <div class="kv"><span>Usinabilité</span><b>${mat.usinabilite}</b></div>
+      <div class="kv"><span>Vc recommandée</span><b>${mat.vc[0]}–${mat.vc[1]} m/min</b></div>
+      <div class="kv"><span>Avance recommandée</span><b>${mat.f[0]}–${mat.f[1]} mm/tr</b></div>
+      <div class="kv"><span>Profondeur de passe</span><b>${mat.ap[0]}–${mat.ap[1]} mm</b></div>
+    </div>
+    <div class="hint">Source : base matières internes YSM · Niveau de confiance : <span class="badge">ÉLEVÉ</span></div>
+  </div>
+  ${nav('','saveStep0()')}`;
+}
+function saveStep0(){
+  S.piece.ref=val('ref');S.piece.designation=val('desig');S.piece.matiere=val('matiere');
+  S.piece.type=val('type');S.piece.qte=val('qte');S.piece.dims=val('dims');S.piece.poids=val('poids');
+  const mat=MATERIALS[S.piece.matiere];
+  S.coupe.vc=Math.round((mat.vc[0]+mat.vc[1])/2);
+  S.coupe.f=+((mat.f[0]+mat.f[1])/2).toFixed(2);
+  S.coupe.ap=+((mat.ap[0]+mat.ap[1])/2).toFixed(1);
+  step++;render();
+}
+
+function stepMachine(){
+  const list=["Tour conventionnel","Tour CNC","Fraiseuse conventionnelle","Fraiseuse CNC","Centre d'usinage 3 axes","Centre d'usinage 4 axes","Centre d'usinage 5 axes","Machine spéciale"];
+  return `<h1>Machine disponible</h1><div class="sub">Étape 3 — sélectionner la machine qui réalisera la pièce</div>
+  <div class="card"><div class="chips">${list.map(x=>`<div class="chip ${S.machine===x?'sel':''}" onclick="pickMachine('${x}')">${x}</div>`).join('')}</div></div>
+  <div class="card"><div class="hint">Les paramètres de coupe calculés à l'étape 5 seront bornés par les limites machine (Vmax broche, avance max, course) si vous les renseignez plus tard.</div></div>
+  ${nav('','step++;render()')}`;
+}
+function pickMachine(x){S.machine=x;render();}
+
+function stepOps(){
+  const isTurn=S.machine.toLowerCase().includes('tour');
+  const list=isTurn?OPS_TOURNAGE:OPS_FRAISAGE;
+  return `<h1>Opérations d'usinage</h1><div class="sub">Étape 4 — ${isTurn?'tournage':'fraisage'} · sélectionnez les opérations nécessaires</div>
+  <div class="card"><div class="chips">${list.map(x=>`<div class="chip ${S.ops.includes(x)?'sel':''}" onclick="toggleOp('${x}')">${x}</div>`).join('')}</div></div>
+  ${nav('','step++;render()')}`;
+}
+function toggleOp(x){const i=S.ops.indexOf(x);if(i>-1)S.ops.splice(i,1);else S.ops.push(x);render();}
+
+function stepCoupe(){
+  const c=S.coupe;
+  const rpm=Math.round((c.vc*1000)/(Math.PI*c.d));
+  const vf=+(c.f*rpm).toFixed(1);
+  return `<h1>Paramètres de coupe</h1><div class="sub">Étape 5 — Vc, RPM, avance et vitesse d'avance</div>
+  <div class="card">
+    <div class="grid">
+      <div class="field"><label>Diamètre usiné D (mm)</label><input id="d" type="number" value="${c.d}" oninput="liveCoupe()"></div>
+      <div class="field"><label>Vitesse de coupe Vc (m/min)</label><input id="vc" type="number" value="${c.vc}" oninput="liveCoupe()"></div>
+      <div class="field"><label>Avance f (mm/tr)</label><input id="f" type="number" step="0.01" value="${c.f}" oninput="liveCoupe()"></div>
+      <div class="field"><label>Profondeur de passe ap (mm)</label><input id="ap" type="number" step="0.1" value="${c.ap}" oninput="liveCoupe()"></div>
+      <div class="field"><label>Longueur usinée (mm)</label><input id="lg" type="number" value="${c.longueur}" oninput="liveCoupe()"></div>
+    </div>
+  </div>
+  <div class="card result" id="coupeResult">
+    <div class="kv"><span>Fréquence de rotation N</span><b id="rpmOut">${rpm} tr/min</b></div>
+    <div class="kv"><span>Vitesse d'avance Vf</span><b id="vfOut">${vf} mm/min</b></div>
+    <div class="kv"><span>Temps de passe estimé</span><b id="tpOut">${(c.longueur/vf).toFixed(2)} min</b></div>
+  </div>
+  ${nav('','saveStep4()')}`;
+}
+function liveCoupe(){
+  const d=+val('d'),vc=+val('vc'),f=+val('f'),lg=+val('lg');
+  const rpm=Math.round((vc*1000)/(Math.PI*d));
+  const vf=+(f*rpm).toFixed(1);
+  document.getElementById('rpmOut').textContent=rpm+' tr/min';
+  document.getElementById('vfOut').textContent=vf+' mm/min';
+  document.getElementById('tpOut').textContent=(lg/vf).toFixed(2)+' min';
+}
+function saveStep4(){
+  S.coupe.d=+val('d');S.coupe.vc=+val('vc');S.coupe.f=+val('f');S.coupe.ap=+val('ap');S.coupe.longueur=+val('lg');
+  step++;render();
+}
+
+function stepOutillage(){
+  const rows=S.tools.map((t,i)=>{
+    return `<tr>
+      <td>${i+1}</td><td>${t.op}</td><td>${t.designation}</td><td>${t.type}</td>
+      <td>${t.ref||'<em style="color:var(--muted)">Non définie</em>'}</td><td>${t.standard}</td><td>${t.dim}</td>
+      <td class="num">${t.duree}</td><td class="num">${t.tempsPiece}</td><td class="num">${t.capacite}</td>
+      <td class="num">${t.qtePieces}</td><td class="num buy">${t.outilsNec}</td><td><button class="iconbtn" onclick="delTool(${i})">✕</button></td>
+    </tr>`;
+  }).join('');
+  const totalRefs=S.tools.length;
+  const totalOutils=sum(S.tools,'outilsNec');
+  return `<h1>Fiche de besoin en outillage</h1><div class="sub">Étape 5 — un outil par opération, besoin calculé selon le nombre de pièces à produire</div>
+  <div class="card">
+    <div class="miniform">
+      <input id="t_op" placeholder="OP20">
+      <input id="t_desig" placeholder="Désignation outil">
+      <select id="t_type"><option>Plaquette</option><option>Fraise</option><option>Foret</option><option>Taraud</option><option>Alésoir</option><option>Autre</option></select>
+      <input id="t_ref" placeholder="Réf. (optionnel)">
+      <select id="t_std"><option>ISO</option><option>DIN/ISO</option><option>Interne</option></select>
+      <input id="t_dim" placeholder="Ø / R">
+    </div>
+    <div class="miniform">
+      <input id="t_mat" placeholder="Matière outil (Carbure…)">
+      <input id="t_duree" type="number" placeholder="Durée de vie (min)" value="60">
+      <input id="t_tp" type="number" step="0.01" placeholder="Temps d'usinage/pièce (min)" value="2.5">
+      <input id="t_qtep" type="number" placeholder="Quantité de pièces" value="${S.piece.qte}">
+      <button class="btn-next" onclick="addTool()">+ Ajouter l'outil</button>
+    </div>
+    <table class="tt"><thead><tr><th>N°</th><th>Opération</th><th>Désignation</th><th>Type</th><th>Référence</th><th>Standard</th><th>Ø/R</th><th>Durée de vie (min)</th><th>Temps/pce (min)</th><th>Capacité (pces/outil)</th><th>Qté pièces</th><th>Outils nécessaires</th><th></th></tr></thead>
+    <tbody>${rows||'<tr><td colspan="13" style="color:var(--muted);">Aucun outil ajouté</td></tr>'}</tbody></table>
+  </div>
+  <div class="card result">
+    <div class="kv"><span>Nombre total de références d'outils</span><b>${totalRefs}</b></div>
+    <div class="kv"><span>Nombre total d'outils nécessaires (série)</span><b>${totalOutils}</b></div>
+  </div>
+  ${nav('','step++;render()')}`;
+}
+function sum(arr,k){return arr.reduce((a,t)=>a+(+t[k]||0),0);}
+function addTool(){
+  const duree=+val('t_duree'), tp=+val('t_tp'), qtep=+val('t_qtep');
+  const capacite=tp>0?Math.floor(duree/tp):0;
+  const outilsNec=capacite>0?Math.ceil(qtep/capacite):0;
+  S.tools.push({op:val('t_op'),designation:val('t_desig'),type:val('t_type'),ref:val('t_ref'),
+    standard:val('t_std'),dim:val('t_dim'),matiere:val('t_mat'),duree:duree,tempsPiece:tp,
+    capacite:capacite,qtePieces:qtep,outilsNec:outilsNec});
+  render();
+}
+function delTool(i){S.tools.splice(i,1);render();}
+
+function stepValidation(){
+  const s=S.dossier;
+  const versRows=S.versions.map(v=>`<tr><td>${v.version}</td><td>${v.date}</td><td>${v.modif}</td><td>${v.auteur}</td><td>${v.validation}</td></tr>`).join('')
+    || `<tr><td colspan="5" style="color:var(--muted);">Aucune version enregistrée</td></tr>`;
+  return `<h1>Validation & rapport</h1><div class="sub">Étape 8 — statut, signatures, historique et export</div>
+  <div class="card">
+    <div class="grid">
+      <div class="field"><label>Numéro de dossier</label><input id="v_num" value="${s.numero}"></div>
+      <div class="field"><label>Méthodiste responsable</label><input id="v_meth" value="${s.methodiste}"></div>
+    </div>
+    <label style="margin:10px 0 8px;">Statut du document</label>
+    <div class="chips">${Object.keys(STATUTS).map(k=>`<div class="chip ${s.statut===k?'sel':''}" onclick="setStatut('${k}')">${STATUTS[k]} ${k}</div>`).join('')}</div>
+    <div class="hint" style="margin-top:10px;">Version actuelle : <b style="color:var(--accent2);font-family:var(--mono)">${s.version}</b> · Dossier ${s.numero} · Créé le ${s.dateCreation}</div>
+  </div>
+  <div class="card">
+    <label style="margin-bottom:10px;">Signatures</label>
+    <div class="sig">
+      <div class="sigcard"><h4>Méthodes</h4><input placeholder="Nom" id="sm_nom" value="${S.sig.methodes.nom}" style="margin-bottom:6px;"><input type="date" id="sm_date" value="${S.sig.methodes.date}"></div>
+      <div class="sigcard"><h4>Régleur CNC</h4><input placeholder="Nom" id="sr_nom" value="${S.sig.regleur.nom}" style="margin-bottom:6px;"><input type="date" id="sr_date" value="${S.sig.regleur.date}"></div>
+      <div class="sigcard"><h4>Production</h4><input placeholder="Nom" id="sp_nom" value="${S.sig.production.nom}" style="margin-bottom:6px;"><input type="date" id="sp_date" value="${S.sig.production.date}"></div>
+    </div>
+  </div>
+  <div class="card">
+    <label style="margin-bottom:10px;">Historique des versions</label>
+    <table class="tt"><thead><tr><th>Version</th><th>Date</th><th>Modification</th><th>Auteur</th><th>Validation</th></tr></thead><tbody>${versRows}</tbody></table>
+    <div class="miniform" style="grid-template-columns:2fr 1fr;margin-top:8px;">
+      <input id="v_modif" placeholder="Décrire la modification pour créer une nouvelle version">
+      <button class="btn-next" onclick="newVersion()">+ Nouvelle version</button>
+    </div>
+  </div>
+  <div class="row-actions">
+    <button class="btn-back" onclick="step--;render()">← Retour</button>
+    <button class="btn-next" onclick="saveValidation();window.print()">🖨 Générer le rapport (imprimer / PDF)</button>
+  </div>
+  <div class="hint">L'impression navigateur (Ctrl/Cmd+P → « Enregistrer en PDF ») produit un document one-page reprenant pièce, gamme, outillage et signatures. Un PDF multi-pages avec logo et QR code n'est pas encore généré dans cette version.</div>
+  ${printTemplate()}`;
+}
+function setStatut(k){S.dossier.statut=k;render();}
+function newVersion(){
+  saveValidation();
+  const n=S.versions.length+1;
+  S.dossier.version='V'+String(n+1).padStart(2,'0');
+  S.versions.push({version:S.dossier.version,date:new Date().toLocaleDateString('fr-FR'),modif:val('v_modif')||'Modification',auteur:S.dossier.methodiste||'Méthodes',validation:'En attente'});
+  render();
+}
+function saveValidation(){
+  S.dossier.numero=val('v_num');S.dossier.methodiste=val('v_meth');
+  S.sig.methodes={nom:val('sm_nom'),date:val('sm_date')};
+  S.sig.regleur={nom:val('sr_nom'),date:val('sr_date')};
+  S.sig.production={nom:val('sp_nom'),date:val('sp_date')};
+}
+function printTemplate(){
+  const opRows=S.ops.map((o,i)=>`<tr><td>OP${(i+1)*10}</td><td>${o}</td></tr>`).join('');
+  const toolRows=S.tools.map((t,i)=>`<tr><td>${i+1}</td><td>${t.op}</td><td>${t.designation}</td><td>${t.ref||'Non définie'}</td><td class="num">${t.capacite}</td><td class="num">${t.qtePieces}</td><td class="num">${t.outilsNec}</td></tr>`).join('');
+  return `<div id="printArea">
+    <h2>YSM Usinage — Fiche de fabrication</h2>
+    <p>Dossier ${S.dossier.numero} · Version ${S.dossier.version} · Statut ${STATUTS[S.dossier.statut]} ${S.dossier.statut} · ${S.dossier.dateCreation}</p>
+    <div class="kv"><span>Référence / Désignation</span><b>${S.piece.ref} — ${S.piece.designation}</b></div>
+    <div class="kv"><span>Matière</span><b>${S.piece.matiere}</b></div>
+    <div class="kv"><span>Quantité</span><b>${S.piece.qte} pcs</b></div>
+    <div class="kv"><span>Machine</span><b>${S.machine}</b></div>
+    <h3>Gamme d'usinage</h3><table class="tt"><tbody>${opRows}</tbody></table>
+    <h3>Fiche de besoin en outillage</h3><table class="tt"><thead><tr><th>N°</th><th>Op</th><th>Outil</th><th>Réf</th><th>Capacité</th><th>Qté pces</th><th>Outils nec.</th></tr></thead><tbody>${toolRows}</tbody></table>
+    <h3>Validation</h3>
+    <p>Méthodes : ${S.sig.methodes.nom||'________'} — ${S.sig.methodes.date||'__/__/____'}<br>
+    Régleur CNC : ${S.sig.regleur.nom||'________'} — ${S.sig.regleur.date||'__/__/____'}<br>
+    Production : ${S.sig.production.nom||'________'} — ${S.sig.production.date||'__/__/____'}</p>
+  </div>`;
+}
+
+function stepGamme(){
+  const mat=MATERIALS[S.piece.matiere];
+  const opRows=S.ops.length?S.ops.map((o,i)=>`<div class="opline"><span class="tag">OP${(i+1)*10}</span><span>${o}</span></div>`).join(''):
+    `<div class="opline"><span class="tag">—</span><span style="color:var(--muted);">Aucune opération sélectionnée à l'étape 3</span></div>`;
+  const totalOutils=sum(S.tools,'outilsNec');
+  return `<h1>Gamme de fabrication — ${S.piece.ref||'Pièce'}</h1><div class="sub">Étape 6 — synthèse complète, prête à imprimer</div>
+  <div class="card">
+    <div class="kv"><span>Désignation</span><b>${S.piece.designation||'—'}</b></div>
+    <div class="kv"><span>Matière</span><b>${S.piece.matiere} · ${mat.groupe}</b></div>
+    <div class="kv"><span>Dimensions</span><b>${S.piece.dims||'—'}</b></div>
+    <div class="kv"><span>Quantité / type de production</span><b>${S.piece.qte} pcs · ${S.piece.type}</b></div>
+    <div class="kv"><span>Machine</span><b>${S.machine}</b></div>
+    <div class="kv"><span>Vc / N / f / Vf</span><b>${S.coupe.vc} m/min · ${Math.round(S.coupe.vc*1000/(Math.PI*S.coupe.d))} tr/min · ${S.coupe.f} mm/tr · ${(S.coupe.f*S.coupe.vc*1000/(Math.PI*S.coupe.d)).toFixed(0)} mm/min</b></div>
+  </div>
+  <div class="card">
+    <label style="margin-bottom:8px;">Gamme d'opérations</label>
+    ${opRows}
+    <div class="opline"><span class="tag">OP${(S.ops.length+1)*10}</span><span>Contrôle dimensionnel (pied à coulisse, rugosimètre)</span></div>
+  </div>
+  <div class="card result">
+    <div class="total"><span>Outils nécessaires (toute la série)</span><b>${totalOutils}</b></div>
+  </div>
+  ${nav('','render()')}
+  <div class="hint">Niveau de confiance global : <span class="badge ${S.ops.length?'':'low'}">${S.ops.length?'ÉLEVÉ':'À COMPLÉTER'}</span> — revenez à une étape via le menu de gauche pour ajuster.</div>`;
+}
+
+function val(id){return document.getElementById(id).value;}
+render();
+</script>
+</body>
+</html>
